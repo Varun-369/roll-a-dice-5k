@@ -12,6 +12,33 @@ const prizes = [
     'Hair Cut'                                  // Bottom
 ];
 
+// To track which prizes have been used in the current cycle
+let availablePrizes = shuffle([...prizes]);
+let displayedPrizes = [];
+
+// Function to shuffle an array (Fisher-Yates shuffle)
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Function to get a random prize without repetition until all prizes have been shown
+function getPrize() {
+    if (availablePrizes.length === 0) {
+        // If all prizes have been displayed, reshuffle and reset
+        availablePrizes = shuffle([...prizes]);
+        displayedPrizes = []; // Reset the displayed prizes
+    }
+
+    // Get and remove the next prize from the availablePrizes array
+    const prize = availablePrizes.pop();
+    displayedPrizes.push(prize);
+    return prize;
+}
+
 // Function to generate a random hex color
 function getRandomColor() {
     const letters = '0123456789ABCDEF';
@@ -22,7 +49,7 @@ function getRandomColor() {
     return color;
 }
 
-// Function to determine if the color is dark or light
+// Function to determine if the color is dark or light for text contrast
 function getContrastYIQ(hexcolor) {
     const r = parseInt(hexcolor.substr(1, 2), 16);
     const g = parseInt(hexcolor.substr(3, 2), 16);
@@ -56,9 +83,21 @@ rollBtn.addEventListener('click', () => {
         if (totalRotation >= 30) {
             clearInterval(interval);
 
-            // Determine which face is on top after stopping
-            const prizeIndex = Math.floor(Math.random() * 6); // Random face selection
-            dice.style.transform = `rotateX(0deg) rotateY(${prizeIndex * 90}deg)`;
+            // Ensure every face has a prize
+            const shuffledPrizes = shuffle([...prizes]); // Shuffle prizes for the faces
+            faces.forEach((face, index) => {
+                face.textContent = shuffledPrizes[index]; // Assign each prize to a face
+            });
+
+            // Rotate the dice to show a random face with no repetition until all are shown
+            const faceIndex = Math.floor(Math.random() * 6);
+            const prize = getPrize(); // Get a random prize ensuring no repetition in the cycle
+
+            // Display the prize on the selected face
+            faces[faceIndex].textContent = prize;
+
+            // Rotate the dice to show the selected prize
+            dice.style.transform = `rotateX(0deg) rotateY(${faceIndex * 90}deg)`;
         }
     }, 166); // Approx. 30 frames over 5 seconds
 });
